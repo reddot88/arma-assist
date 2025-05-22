@@ -7,7 +7,7 @@ export default function App() {
 
   const ask = async () => {
     if (!question.trim()) return;
-    const res = await fetch("http://localhost:8000/query", {
+    const res = await fetch("http://147.93.81.222:8000/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
@@ -20,27 +20,27 @@ export default function App() {
   const uploadChunks = async () => {
     const lines = chunks.split("\n").filter(Boolean);
     const data = lines.map((line, i) => ({ id: `chunk-${i}`, content: line }));
-    await fetch("http://localhost:8000/upload", {
+    await fetch("http://147.93.81.222:8000/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     alert("Uploaded!");
   };
-	
+
   const handlePDFUpload = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://localhost:8000/upload-pdf", {
+    const res = await fetch("http://147.93.81.222:8000/upload-pdf", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
-    alert(`Uploaded ${data.pages} pages from ${file.name}`);
+    alert(`✅ Uploaded ${data.pages} pages from ${file.name}`);
   };
-	
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <h1 className="text-xl font-bold">AI Audit Assistant</h1>
@@ -69,13 +69,13 @@ export default function App() {
         placeholder="Paste document chunks here, one per line..."
       />
       <button onClick={uploadChunks} className="bg-green-600 text-white px-4 py-2 rounded">Upload Chunks</button>
-	<input
-	  type="file"
-	  accept="application/pdf"
-	  onChange={handlePDFUpload}
-	  className="mt-4"
-	/>
+
+      <input
+        type="file"
+        accept="application/pdf"
+        onChange={handlePDFUpload}
+        className="mt-4"
+      />
     </div>
   );
-
 }
