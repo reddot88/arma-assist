@@ -1,72 +1,81 @@
 import React, { useState } from "react";
 
-function App() {
+export default function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [chunks, setChunks] = useState("");
 
-  const askQuestion = async () => {
+  const ask = async () => {
     if (!question.trim()) return;
-    setLoading(true);
-    const newMessages = [...messages, { role: "user", text: question }];
-    setMessages(newMessages);
+    const res = await fetch("http://localhost:8000/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    const data = await res.json();
+    setMessages([...messages, { role: "user", text: question }, { role: "bot", text: data.answer }]);
     setQuestion("");
+  };
 
-    try {
-      const res = await fetch("http://localhost:8000/query", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ question }),
-      });
-
-      const data = await res.json();
-      setMessages([...newMessages, { role: "assistant", text: data.answer }]);
-    } catch (err) {
-      setMessages([
-        ...newMessages,
-        { role: "assistant", text: "⚠️ Failed to connect to backend." },
-      ]);
-    }
-    setLoading(false);
+  const uploadChunks = async () => {
+    const lines = chunks.split("\n").filter(Boolean);
+    const data = lines.map((line, i) => ({ id: `chunk-${i}`, content: line }));
+    await fetch("http://localhost:8000/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    alert("Uploaded!");
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">AI Audit Assistant</h1>
-      <div className="space-y-3">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-xl ${
-              msg.role === "user" ? "bg-blue-100" : "bg-green-100"
-            }`}
-          >
-            <strong>{msg.role === "user" ? "You" : "Assistant"}:</strong>{" "}
-            {msg.text}
+    <div className="max-w-2xl mx-auto p-4 space-y-4">
+      <h1 className="text-xl font-bold">AI Audit Assistant</h1>
+      <div className="space-y-2">
+        {messages.map((m, i) => (
+          <div key={i} className={m.role === "user" ? "text-blue-600" : "text-green-700"}>
+            <strong>{m.role === "user" ? "You" : "Bot"}:</strong> {m.text}
           </div>
         ))}
       </div>
       <div className="flex gap-2">
         <input
-          type="text"
-          className="flex-1 border rounded p-2"
-          placeholder="Ask your question..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && askQuestion()}
+          className="border p-2 flex-1"
+          placeholder="Ask your question..."
         />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={askQuestion}
-          disabled={loading}
-        >
-          {loading ? "..." : "Ask"}
-        </button>
+        <button onClick={ask} className="bg-blue-500 text-white px-4 rounded">Send</button>
       </div>
+
+      <textarea
+        rows={4}
+        value={chunks}
+        onChange={(e) => setChunks(e.target.value)}
+        className="w-full p-2 border"
+        placeholder="Paste document chunks here, one per line..."
+      />
+      <button onClick={uploadChunks} className="bg-green-600 text-white px-4 py-2 rounded">Upload Chunks</button>
+	<input
+	  type="file"
+	  accept="application/pdf"
+	  onChange={handlePDFUpload}
+	  className="mt-4"
+	/>
     </div>
   );
-}
 
-export default App;
+const handlePDFUpload = async (e) => {
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("http://localhost:8000/upload-pdf", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  alert(`Uploaded ${data.pages} pages from ${file.name}`);
+};
+
+}

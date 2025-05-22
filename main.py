@@ -59,3 +59,26 @@ async def query_docs(query: QueryRequest):
 
     response = openai.ChatCompletion.create(model="gpt-4", messages=messages)
     return {"answer": response.choices[0].message.content.strip()}
+
+# Upload PDF
+from fastapi import UploadFile, File
+import fitz  # PyMuPDF
+
+@app.post("/upload-pdf")
+async def upload_pdf(file: UploadFile = File(...)):
+    content = await file.read()
+    doc = fitz.open(stream=content, filetype="pdf")
+    chunks = []
+    for i, page in enumerate(doc):
+        text = page.get_text().strip()
+        if text:
+            chunks.append({
+                "id": f"{file.filename}-p{i}",
+                "content": text
+            })
+    collection.add(
+        documents=[c["content"] for c in chunks],
+        ids=[c["id"] for c in chunks],
+        metadatas=[{"source": c["id"]} for c in chunks]
+    )
+    return {"status": "uploaded", "pages": len(chunks)}
