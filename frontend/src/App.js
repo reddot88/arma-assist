@@ -27,7 +27,20 @@ export default function App() {
     });
     alert("Uploaded!");
   };
+	
+  const handlePDFUpload = async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
 
+    const res = await fetch("http://localhost:8000/upload-pdf", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    alert(`Uploaded ${data.pages} pages from ${file.name}`);
+  };
+	
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <h1 className="text-xl font-bold">AI Audit Assistant</h1>
@@ -64,18 +77,5 @@ export default function App() {
 	/>
     </div>
   );
-
-const handlePDFUpload = async (e) => {
-  const file = e.target.files[0];
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch("http://localhost:8000/upload-pdf", {
-    method: "POST",
-    body: formData,
-  });
-  const data = await res.json();
-  alert(`Uploaded ${data.pages} pages from ${file.name}`);
-};
 
 }
