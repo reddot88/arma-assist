@@ -25,10 +25,9 @@ export default function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    alert("Uploaded!");
+    alert("✅ Chunks uploaded successfully!");
   };
 
-  // Move the PDF upload function here (before return)
   const handlePDFUpload = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
@@ -39,45 +38,56 @@ export default function App() {
       body: formData,
     });
     const data = await res.json();
-    alert(`Uploaded ${data.pages} pages from ${file.name}`);
+    alert(`✅ Uploaded ${data.pages} pages from ${file.name}`);
   };
 
-  // Return block starts here:
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <h1 className="text-xl font-bold">AI Audit Assistant</h1>
-      <div className="space-y-2">
-        {messages.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "text-blue-600" : "text-green-700"}>
-            <strong>{m.role === "user" ? "You" : "Bot"}:</strong> {m.text}
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="border p-2 flex-1"
-          placeholder="Ask your question..."
+    <div className="flex flex-col min-h-screen bg-gray-900 text-white p-4">
+      <h1 className="text-2xl font-bold text-center mb-6">AI Audit Assistant</h1>
+
+      <div className="flex flex-col space-y-4 max-w-2xl mx-auto flex-1">
+        <div className="space-y-2 bg-gray-800 p-4 rounded shadow">
+          {messages.map((m, i) => (
+            <div key={i} className={m.role === "user" ? "text-blue-400" : "text-green-400"}>
+              <strong>{m.role === "user" ? "You" : "Bot"}:</strong> {m.text}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            className="flex-1 p-2 rounded bg-gray-800 border border-gray-700 focus:outline-none"
+            placeholder="Ask your question..."
+          />
+          <button onClick={ask} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded">
+            Send
+          </button>
+        </div>
+
+        <textarea
+          rows={4}
+          value={chunks}
+          onChange={(e) => setChunks(e.target.value)}
+          className="p-2 rounded bg-gray-800 border border-gray-700 focus:outline-none"
+          placeholder="Paste document chunks here, one per line..."
         />
-        <button onClick={ask} className="bg-blue-500 text-white px-4 rounded">Send</button>
+        <button onClick={uploadChunks} className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded">
+          Upload Chunks
+        </button>
+
+        <div className="flex items-center gap-2">
+          <label className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded cursor-pointer">
+            Choose PDF
+            <input type="file" accept="application/pdf" onChange={handlePDFUpload} className="hidden" />
+          </label>
+        </div>
       </div>
 
-      <textarea
-        rows={4}
-        value={chunks}
-        onChange={(e) => setChunks(e.target.value)}
-        className="w-full p-2 border"
-        placeholder="Paste document chunks here, one per line..."
-      />
-      <button onClick={uploadChunks} className="bg-green-600 text-white px-4 py-2 rounded">Upload Chunks</button>
-
-      <input
-        type="file"
-        accept="application/pdf"
-        onChange={handlePDFUpload}
-        className="mt-4"
-      />
+      <footer className="text-center text-gray-500 mt-6 text-sm">
+        Made with ❤️ for IT Auditors
+      </footer>
     </div>
   );
 }
